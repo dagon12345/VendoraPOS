@@ -1,0 +1,104 @@
+<section class="product-stock-history">
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (error() && !product()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (product(); as p) {
+    <div class="list-header">
+      <h1>{{ p.name }}</h1>
+      <a class="btn btn-outline" routerLink="/products">Back to products</a>
+    </div>
+    <p class="muted">Current quantity on hand: <strong>{{ p.quantityOnHand }}</strong></p>
+
+    <h2>Stock History</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="movement-form">
+      <div class="field">
+        <label for="reason">Reason</label>
+        <select id="reason" formControlName="reason">
+          @for (r of reasons; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="quantity">{{ quantityLabel() }}</label>
+        <input
+          id="quantity"
+          type="number"
+          [min]="isSignedInput() ? null : 1"
+          formControlName="quantity"
+        />
+        <span class="field-hint">{{ quantityHint() }}</span>
+        @if (form.controls.quantity.touched && form.controls.quantity.value === 0) {
+          <span class="field-error">Quantity cannot be zero.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="note">Note (optional)</label>
+        <textarea id="note" rows="2" formControlName="note"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Record movement' }}
+      </button>
+    </form>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    @if (movements().length === 0) {
+      <p class="muted">No movements recorded yet.</p>
+    } @else {
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Change</th>
+            <th>Reason</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of movements(); track m.id) {
+            <tr>
+              <td data-label="Date">{{ m.createdAtUtc | date: 'medium' }}</td>
+              <td data-label="Change">{{ m.quantityDelta > 0 ? '+' : '' }}{{ m.quantityDelta }}</td>
+              <td data-label="Reason">{{ m.reason }}</td>
+              <td data-label="Note">{{ m.note || '—' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn-outline" (click)="reverse(m)">Reverse</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    <h2>Activity Log</h2>
+
+    @if (auditLog().length === 0) {
+      <p class="muted">No edits or status changes recorded yet.</p>
+    } @else {
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of auditLog(); track entry.id) {
+            <tr>
+              <td data-label="Date">{{ entry.createdAtUtc | date: 'medium' }}</td>
+              <td data-label="Action">{{ entry.action }}</td>
+              <td data-label="Details">{{ entry.summary }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+</section>

@@ -21,3 +21,13 @@ export interface UpdateProductRequest {
   price: number;
   description?: string | null;
 }
+
+export type ProductAuditAction = 'Edited' | 'Activated' | 'Deactivated';
+
+export interface ProductAuditLog {
+  id: string;
+  productId: string;
+  action: ProductAuditAction;
+  summary: string;
+  createdAtUtc: string;
+}

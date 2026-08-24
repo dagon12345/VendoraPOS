@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vendora.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Vendora.Infrastructure.Persistence;
 namespace Vendora.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(VendoraDbContext))]
-    partial class VendoraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824084211_AddProductAuditLog")]
+    partial class AddProductAuditLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

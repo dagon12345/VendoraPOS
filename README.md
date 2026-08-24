@@ -3,7 +3,8 @@
 A cloud-based, subscription POS platform for pharmacies, small retail stores, and coffee shops.
 Backend: .NET (Clean Architecture + DDD + Repository pattern). Frontend: Angular.
 
-See [docs/architecture.md](docs/architecture.md) for the full design rationale and folder-by-folder explanation.
+See [docs/architecture.md](docs/architecture.md) for the full design rationale and folder-by-folder explanation,
+or [docs/user-guide.md](docs/user-guide.md) for plain-language instructions on using each feature.
 
 ## Repository layout
 

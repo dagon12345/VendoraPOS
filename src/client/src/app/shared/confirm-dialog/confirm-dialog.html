@@ -1,0 +1,21 @@
+@if (open) {
+  <div class="dialog-backdrop" (click)="onBackdropClick()">
+    <div class="dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h2>{{ title }}</h2>
+      <p>{{ message }}</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline" [disabled]="confirming" (click)="cancelled.emit()">
+          {{ cancelLabel }}
+        </button>
+        <button
+          type="button"
+          [class]="danger ? 'btn btn-danger' : 'btn btn-primary'"
+          [disabled]="confirming"
+          (click)="confirmed.emit()"
+        >
+          {{ confirming ? confirmingLabel : confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

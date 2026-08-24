@@ -1,0 +1,66 @@
+<section class="product-form">
+  <h1>{{ isEditMode() ? 'Edit product' : 'New product' }}</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="sku">SKU</label>
+      <input id="sku" type="text" formControlName="sku" />
+      @if (form.controls.sku.invalid && form.controls.sku.touched) {
+        <span class="field-error">SKU is required.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" type="text" formControlName="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="field-error">Name is required.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="price">Price</label>
+      <input id="price" type="number" step="0.01" formControlName="price" />
+      @if (form.controls.price.invalid && form.controls.price.touched) {
+        <span class="field-error">Price must be greater than 0.</span>
+      }
+    </div>
+
+    @if (!isEditMode()) {
+      <div class="field">
+        <label for="initialQuantity">Initial quantity</label>
+        <input id="initialQuantity" type="number" formControlName="initialQuantity" />
+        @if (form.controls.initialQuantity.invalid && form.controls.initialQuantity.touched) {
+          <span class="field-error">Quantity cannot be negative.</span>
+        }
+      </div>
+    }
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" rows="3" formControlName="description"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </button>
+    </div>
+  </form>
+
+  <app-confirm-dialog
+    [open]="confirmingSave()"
+    title="Save changes"
+    message="Save these changes to the product? This will also be recorded in its audit log."
+    confirmLabel="Save"
+    confirmingLabel="Saving…"
+    [danger]="false"
+    (confirmed)="confirmSave()"
+    (cancelled)="cancelSave()"
+  />
+</section>

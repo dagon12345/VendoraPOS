@@ -1,32 +1,70 @@
 <section class="product-list">
-  <h1>Products</h1>
+  <div class="list-header">
+    <h1>Products</h1>
+    <a class="btn btn-primary" routerLink="/products/new">+ New Product</a>
+  </div>
 
-  @if (loading()) {
-    <p>Loading…</p>
-  } @else if (error()) {
-    <p class="error">{{ error() }}</p>
-  } @else if (products().length === 0) {
-    <p>No products yet.</p>
+  @if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
   } @else {
-    <table>
-      <thead>
-        <tr>
-          <th>SKU</th>
-          <th>Name</th>
-          <th>Price</th>
-          <th>Qty on hand</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (product of products(); track product.id) {
+    @if (actionError()) {
+      <div class="error-banner">
+        <span>{{ actionError() }}</span>
+        <button type="button" class="btn btn-outline" (click)="dismissActionError()">Dismiss</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <p>Loading…</p>
+    } @else if (products().length === 0) {
+      <p class="muted">No products yet.</p>
+    } @else {
+      <table class="responsive-table">
+        <thead>
           <tr>
-            <td>{{ product.sku }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.price | number: '1.2-2' }}</td>
-            <td>{{ product.quantityOnHand }}</td>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Qty on hand</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr>
+              <td data-label="SKU">{{ product.sku }}</td>
+              <td data-label="Name">{{ product.name }}</td>
+              <td data-label="Price">{{ product.price | number: '1.2-2' }}</td>
+              <td data-label="Qty on hand">{{ product.quantityOnHand }}</td>
+              <td data-label="Status">{{ product.isActive ? 'Active' : 'Inactive' }}</td>
+              <td class="actions">
+                <a class="btn btn-outline" [routerLink]="['/products', product.id, 'edit']">Edit</a>
+                <a class="btn btn-outline" [routerLink]="['/products', product.id, 'history']">History</a>
+                <button
+                  type="button"
+                  class="btn btn-outline"
+                  [disabled]="togglingId() === product.id"
+                  (click)="requestToggleActive(product)"
+                >
+                  {{ product.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
   }
+
+  <app-confirm-dialog
+    [open]="productPendingDeactivate() !== null"
+    title="Deactivate product"
+    [message]="'Deactivate \'' + productPendingDeactivate()?.name + '\'? It will no longer show as active, but its history is kept and you can reactivate it anytime.'"
+    confirmLabel="Deactivate"
+    confirmingLabel="Deactivating…"
+    [confirming]="deactivating()"
+    (confirmed)="confirmDeactivate()"
+    (cancelled)="cancelDeactivate()"
+  />
 </section>

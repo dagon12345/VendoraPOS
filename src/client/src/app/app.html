@@ -1,1 +1,10 @@
-<router-outlet />
+<header class="app-header">
+  <span class="brand">VendoraPOS</span>
+  <nav>
+    <a routerLink="/products" routerLinkActive="active">Products</a>
+    <a routerLink="/help" routerLinkActive="active">Help</a>
+  </nav>
+</header>
+<main class="app-main">
+  <router-outlet />
+</main>

@@ -1,0 +1,64 @@
+.product-stock-history {
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+  }
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .movement-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin: 1rem 0 1.5rem;
+
+    .field {
+      margin-bottom: 0;
+      flex: 1 1 160px;
+    }
+
+    button {
+      flex-shrink: 0;
+    }
+  }
+
+  select {
+    min-height: 44px;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 16px;
+    width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    .list-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .movement-form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+}

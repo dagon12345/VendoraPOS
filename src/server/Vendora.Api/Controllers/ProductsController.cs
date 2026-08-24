@@ -32,7 +32,24 @@ public class ProductsController(IProductService productService) : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
-        await productService.DeleteAsync(id, ct) ? NoContent() : NotFound();
+    [HttpPost("{id:guid}/activate")]
+    public async Task<ActionResult<ProductDto>> Activate(Guid id, CancellationToken ct)
+    {
+        var product = await productService.SetActiveAsync(id, true, ct);
+        return product is null ? NotFound() : Ok(product);
+    }
+
+    [HttpPost("{id:guid}/deactivate")]
+    public async Task<ActionResult<ProductDto>> Deactivate(Guid id, CancellationToken ct)
+    {
+        var product = await productService.SetActiveAsync(id, false, ct);
+        return product is null ? NotFound() : Ok(product);
+    }
+
+    [HttpGet("{id:guid}/audit-log")]
+    public async Task<ActionResult<IReadOnlyList<ProductAuditLogDto>>> GetAuditLog(Guid id, CancellationToken ct)
+    {
+        var log = await productService.GetAuditLogAsync(id, ct);
+        return log is null ? NotFound() : Ok(log);
+    }
 }

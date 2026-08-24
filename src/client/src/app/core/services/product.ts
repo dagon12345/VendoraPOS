@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateProductRequest, Product, UpdateProductRequest } from '../models/product.model';
+import { CreateProductRequest, Product, ProductAuditLog, UpdateProductRequest } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -26,7 +26,11 @@ export class ProductService {
     return this.http.put<Product>(`${this.baseUrl}/${id}`, request);
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  setActive(id: string, isActive: boolean): Observable<Product> {
+    return this.http.post<Product>(`${this.baseUrl}/${id}/${isActive ? 'activate' : 'deactivate'}`, {});
+  }
+
+  getAuditLog(id: string): Observable<ProductAuditLog[]> {
+    return this.http.get<ProductAuditLog[]>(`${this.baseUrl}/${id}/audit-log`);
   }
 }

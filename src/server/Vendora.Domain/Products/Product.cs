@@ -60,4 +60,10 @@ public class Product : BaseEntity
         IsActive = false;
         MarkUpdated();
     }
+
+    public void Activate()
+    {
+        IsActive = true;
+        MarkUpdated();
+    }
 }

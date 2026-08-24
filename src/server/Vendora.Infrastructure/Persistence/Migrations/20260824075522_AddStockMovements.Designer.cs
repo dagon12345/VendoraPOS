@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vendora.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Vendora.Infrastructure.Persistence;
 namespace Vendora.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(VendoraDbContext))]
-    partial class VendoraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824075522_AddStockMovements")]
+    partial class AddStockMovements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,38 +68,6 @@ namespace Vendora.Infrastructure.Persistence.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
-            modelBuilder.Entity("Vendora.Domain.Products.ProductAuditLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Summary")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductAuditLogs", (string)null);
-                });
-
             modelBuilder.Entity("Vendora.Domain.StockMovements.StockMovement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -129,15 +100,6 @@ namespace Vendora.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("StockMovements", (string)null);
-                });
-
-            modelBuilder.Entity("Vendora.Domain.Products.ProductAuditLog", b =>
-                {
-                    b.HasOne("Vendora.Domain.Products.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Vendora.Domain.StockMovements.StockMovement", b =>

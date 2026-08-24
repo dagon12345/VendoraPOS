@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VendoraPOS User Guide</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #1f2328; margin: 2cm; }
+  h1 { font-size: 22pt; margin-bottom: 4pt; }
+  h2 { font-size: 16pt; margin-top: 24pt; border-bottom: 1pt solid #ccc; padding-bottom: 4pt; }
+  h3 { font-size: 13pt; margin-top: 16pt; }
+  p { margin: 8pt 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10pt 0; }
+  th, td { border: 1pt solid #999; padding: 6pt 8pt; text-align: left; font-size: 11pt; }
+  th { background: #f0f0f0; }
+  blockquote { border-left: 3pt solid #999; margin: 10pt 0; padding: 4pt 12pt; background: #f7f7f7; color: #444; }
+  code { font-family: Consolas, monospace; background: #f0f0f0; padding: 1pt 3pt; }
+  .subtitle { color: #555; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>VendoraPOS User Guide</h1>
+<p class="subtitle">Plain-language instructions for using each feature as it ships. This is written for the
+person running the store, not for developers.</p>
+<p>A new section is added here every time a feature is completed, so this guide always reflects what the
+app can currently do.</p>
+
+<h2>Products</h2>
+
+<h3>Viewing products</h3>
+<p>Go to <b>Products</b> in the top navigation. You'll see every product with its SKU, name, price,
+quantity on hand, and whether it's active.</p>
+
+<h3>Adding a product</h3>
+<p>Click <b>+ New Product</b>, fill in SKU, name, price, initial quantity, and an optional description,
+then <b>Save</b>. The initial quantity is automatically recorded as the product's first stock history
+entry (see below), so it's never a mystery number later.</p>
+
+<h3>Editing a product</h3>
+<p>Click <b>Edit</b> on a product's row. You can change name, price, and description. SKU and quantity
+can't be edited here directly — quantity changes go through <b>Stock History</b> instead, so there's
+always a record of why it changed. Click <b>Save</b> and confirm in the dialog that appears — every saved
+edit is recorded in the product's <b>Activity Log</b> (see below).</p>
+
+<h3>Deactivating a product</h3>
+<p>Click <b>Deactivate</b> on a product's row, then confirm in the dialog that appears, to mark it
+inactive (its Status column changes to "Inactive") without deleting it or losing its stock history. Click
+<b>Activate</b> on an inactive product to bring it back immediately — no confirmation needed. Use this for
+a product you've stopped carrying but don't want to erase.</p>
+<blockquote>There is no way to permanently delete a product. Almost every product picks up stock history
+the moment it's created (any starting quantity above zero), so deletion was never actually usable in
+practice — <b>Deactivate</b> is the supported way to retire a product while keeping its full history
+intact.</blockquote>
+
+<h2>Stock History</h2>
+<p>Click <b>History</b> on any product's row to see its full stock ledger and record new stock changes.</p>
+
+<h3>Why three reasons, not one?</h3>
+<table>
+<tr><th>Reason</th><th>What it means</th><th>Direction</th></tr>
+<tr><td><b>Restock</b></td><td>New stock arrived — a delivery, a supplier order</td><td>Always <b>adds</b> stock</td></tr>
+<tr><td><b>Waste</b></td><td>Stock was lost for a bad reason — expired, damaged, spoiled</td><td>Always <b>removes</b> stock</td></tr>
+<tr><td><b>Adjustment</b></td><td>A correction after finding the recorded count is wrong (e.g. a stocktake found more or fewer than the system says)</td><td>Can go <b>either way</b></td></tr>
+</table>
+<p>You don't need to think about plus/minus signs for Restock or Waste — just enter how many units were
+received or lost, and the app applies the correct direction. Adjustment is the one case where you enter a
+signed number yourself, since a correction can go up or down.</p>
+<p>There's a fourth entry you'll see in the history table, <b>Initial Stock</b> — this is recorded
+automatically the moment a product is created with a starting quantity. You never select it manually.</p>
+
+<h3>Recording a stock change</h3>
+<p>On a product's History page, fill in the reason, the quantity, and an optional note (e.g. "Delivery
+from ABC Supplier" or "Found broken on shelf"), then <b>Record movement</b>. The product's quantity on
+hand updates immediately, and the new entry appears at the top of the history table.</p>
+
+<h3>Fixing a mistake</h3>
+<p>Stock history entries can't be edited or deleted once recorded — this is intentional, so the record of
+what happened can't be quietly changed later. If you entered the wrong number, click <b>Reverse</b> on
+that row: it pre-fills the form with the exact opposite quantity as an Adjustment, with a note explaining
+what it's correcting. Review it and click <b>Record movement</b> to confirm — this cancels out the mistake
+while keeping both entries visible in the history, so nothing is hidden.</p>
+<blockquote>If a stock change would make the quantity go negative, you'll see an error message and the
+change is rejected — the product's quantity is never allowed to go below zero.</blockquote>
+
+<h2>Activity Log</h2>
+<p>Below the stock history on a product's History page is its <b>Activity Log</b> — a separate record of
+changes to the product's own details (not its quantity): every saved edit (showing exactly which fields
+changed, old value to new value) and every activate/deactivate. Like stock history, entries here can't be
+edited or removed — it's a permanent record of what happened to the product over time.</p>
+
+</body>
+</html>
