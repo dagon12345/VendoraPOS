@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/server/">
+    <Project Path="src/server/Vendora.Api/Vendora.Api.csproj" />
+    <Project Path="src/server/Vendora.Application/Vendora.Application.csproj" />
+    <Project Path="src/server/Vendora.Domain/Vendora.Domain.csproj" />
+    <Project Path="src/server/Vendora.Infrastructure/Vendora.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vendora.Application.Tests/Vendora.Application.Tests.csproj" />
+    <Project Path="tests/Vendora.Domain.Tests/Vendora.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
