@@ -18,5 +18,6 @@ dist/
 .DS_Store
 
 # Secrets - never commit real connection strings/keys
+**/appsettings.Production.json
 **/appsettings.*.local.json
 *.pfx

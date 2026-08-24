@@ -33,12 +33,23 @@ VendoraPOS/
 
 ## Running locally
 
-**API** (from `src/server/Vendora.Api`):
+**API**:
+```
+./scripts/run-api.sh          # dotnet run — single start
+./scripts/run-api.sh watch    # dotnet watch run — auto-rebuild/restart on file changes
+```
+Listens on `https://localhost:7196`. This frees ports 7196/5136 first, so it's safe to re-run even if a
+previous instance (e.g. one started in the background by a tool) is still holding the port — `Ctrl+C` only
+kills a foreground process in your own terminal, so a detached instance needs this instead.
+The local DB connection string lives in `appsettings.json` for development (real production values go in
+a gitignored `appsettings.Production.json` instead).
+
+If running manually instead of via the script (from `src/server/Vendora.Api`), always pass the `https`
+launch profile — otherwise the API only binds to `http://localhost:5136`, and the Angular proxy (which
+targets `https://localhost:7196`) can't reach it:
 ```
 dotnet run --launch-profile https
 ```
-Listens on `https://localhost:7196`. The local DB connection string lives in `dotnet user-secrets`
-(never committed) — see `dotnet user-secrets list` in that project folder.
 
 **Client** (from `src/client`):
 ```
