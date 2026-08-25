@@ -72,27 +72,34 @@ If you use a different container name/password, update `ConnectionStrings:Defaul
 `appsettings.json` locally — just don't commit real production credentials there (see
 `.gitignore` — `appsettings.Production.json` is already excluded for that reason).
 
-**2. Apply migrations** (from `src/server/Vendora.Api`):
-```bash
-dotnet ef database update --project ../Vendora.Infrastructure --startup-project .
-```
-
-**3. Run the API**:
+**2. Run the API** — that's it, no manual migration step needed:
 ```bash
 ./scripts/run-api.sh          # dotnet run
 ./scripts/run-api.sh watch    # dotnet watch run (auto-reload)
 ```
-This frees ports 7196/5136 first, so re-running is always safe. It's a bash script — works as-is in a
-Linux/macOS terminal, or in **Git Bash** or **WSL2** on Windows. If you're in native PowerShell/CMD, just
-run `dotnet run --launch-profile https` directly instead (from `src/server/Vendora.Api`); if you hit a
-"port already in use" error, find and stop the process with:
+On startup, in the Development environment, the API automatically applies any pending EF Core migrations
+(creating the database schema from nothing, if needed) and then seeds 20 sample products (spanning
+pharmacy/retail/coffee-shop, matching the generic data model) — but only if the `Products` table is
+completely empty, so it never touches or duplicates data on a database you've already been working in.
+See `Program.cs` and `Vendora.Infrastructure/Persistence/DbSeeder.cs`.
+
+`./scripts/run-api.sh` frees ports 7196/5136 first, so re-running is always safe. It's a bash script —
+works as-is in a Linux/macOS terminal, or in **Git Bash** or **WSL2** on Windows. If you're in native
+PowerShell/CMD, just run `dotnet run --launch-profile https` directly instead (from
+`src/server/Vendora.Api`); if you hit a "port already in use" error, find and stop the process with:
 ```powershell
 Get-Process -Id (Get-NetTCPConnection -LocalPort 7196).OwningProcess | Stop-Process
 ```
 Either way, you must pass `--launch-profile https` when running manually, or the Angular proxy won't be
 able to reach the API — see the README.
 
-**4. Run the client** (from `src/client`):
+If you ever need to run migrations manually instead (e.g. against a database the API isn't pointed at),
+from `src/server/Vendora.Api`:
+```bash
+dotnet ef database update --project ../Vendora.Infrastructure --startup-project .
+```
+
+**3. Run the client** (from `src/client`):
 ```bash
 npm install
 npm start

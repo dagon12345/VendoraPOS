@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../../core/services/product';
@@ -21,6 +21,44 @@ export class ProductList implements OnInit {
   readonly togglingId = signal<string | null>(null);
   readonly productPendingDeactivate = signal<Product | null>(null);
   readonly deactivating = signal(false);
+
+  readonly searchTerm = signal('');
+  readonly pageSize = signal(10);
+  readonly currentPage = signal(1);
+  readonly pageSizeOptions = [10, 25, 50, 100];
+
+  readonly filteredProducts = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) {
+      return this.products();
+    }
+    return this.products().filter(
+      (p) => p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term),
+    );
+  });
+
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredProducts().length / this.pageSize())));
+
+  readonly pagedProducts = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredProducts().slice(start, start + this.pageSize());
+  });
+
+  /** Page numbers to render, collapsing long runs into '...' so this stays usable with many pages. */
+  readonly pageNumbers = computed<(number | '...')[]>(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: (number | '...')[] = [];
+
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - current) <= 1) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...');
+      }
+    }
+    return pages;
+  });
 
   constructor(private readonly productService: ProductService) {}
 
@@ -45,6 +83,28 @@ export class ProductList implements OnInit {
 
   dismissActionError(): void {
     this.actionError.set(null);
+  }
+
+  onSearchChange(term: string): void {
+    this.searchTerm.set(term);
+    this.currentPage.set(1);
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage.set(Math.min(Math.max(1, page), this.totalPages()));
+  }
+
+  previousPage(): void {
+    this.goToPage(this.currentPage() - 1);
+  }
+
+  nextPage(): void {
+    this.goToPage(this.currentPage() + 1);
   }
 
   /** Activating needs no confirmation; deactivating does, since it hides the product from sale. */

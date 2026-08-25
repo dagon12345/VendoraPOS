@@ -19,41 +19,99 @@
     } @else if (products().length === 0) {
       <p class="muted">No products yet.</p>
     } @else {
-      <table class="responsive-table">
-        <thead>
-          <tr>
-            <th>SKU</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Qty on hand</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (product of products(); track product.id) {
+      <div class="toolbar">
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search by name or SKU…"
+          [value]="searchTerm()"
+          (input)="onSearchChange($any($event.target).value)"
+        />
+      </div>
+
+      @if (filteredProducts().length === 0) {
+        <p class="muted">No products match "{{ searchTerm() }}".</p>
+      } @else {
+        <table class="responsive-table">
+          <thead>
             <tr>
-              <td data-label="SKU">{{ product.sku }}</td>
-              <td data-label="Name">{{ product.name }}</td>
-              <td data-label="Price">{{ product.price | number: '1.2-2' }}</td>
-              <td data-label="Qty on hand">{{ product.quantityOnHand }}</td>
-              <td data-label="Status">{{ product.isActive ? 'Active' : 'Inactive' }}</td>
-              <td class="actions">
-                <a class="btn btn-outline" [routerLink]="['/products', product.id, 'edit']">Edit</a>
-                <a class="btn btn-outline" [routerLink]="['/products', product.id, 'history']">History</a>
-                <button
-                  type="button"
-                  class="btn btn-outline"
-                  [disabled]="togglingId() === product.id"
-                  (click)="requestToggleActive(product)"
-                >
-                  {{ product.isActive ? 'Deactivate' : 'Activate' }}
-                </button>
-              </td>
+              <th>SKU</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Qty on hand</th>
+              <th>Status</th>
+              <th></th>
             </tr>
+          </thead>
+          <tbody>
+            @for (product of pagedProducts(); track product.id) {
+              <tr>
+                <td data-label="SKU">{{ product.sku }}</td>
+                <td data-label="Name">{{ product.name }}</td>
+                <td data-label="Price">{{ product.price | number: '1.2-2' }}</td>
+                <td data-label="Qty on hand">{{ product.quantityOnHand }}</td>
+                <td data-label="Status">{{ product.isActive ? 'Active' : 'Inactive' }}</td>
+                <td class="actions">
+                  <a class="btn btn-outline" [routerLink]="['/products', product.id, 'edit']">Edit</a>
+                  <a class="btn btn-outline" [routerLink]="['/products', product.id, 'history']">History</a>
+                  <button
+                    type="button"
+                    class="btn btn-outline"
+                    [disabled]="togglingId() === product.id"
+                    (click)="requestToggleActive(product)"
+                  >
+                    {{ product.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <label class="page-size">
+            Rows per page:
+            <select [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
+              @for (size of pageSizeOptions; track size) {
+                <option [value]="size">{{ size }}</option>
+              }
+            </select>
+          </label>
+
+          @if (totalPages() > 1) {
+            <nav class="page-nav" aria-label="Pagination">
+              <button type="button" class="btn btn-outline" [disabled]="currentPage() === 1" (click)="previousPage()">
+                ‹ Previous
+              </button>
+
+              @for (page of pageNumbers(); track $index) {
+                @if (page === '...') {
+                  <span class="ellipsis">…</span>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn"
+                    [class.btn-primary]="page === currentPage()"
+                    [class.btn-outline]="page !== currentPage()"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                }
+              }
+
+              <button
+                type="button"
+                class="btn btn-outline"
+                [disabled]="currentPage() === totalPages()"
+                (click)="nextPage()"
+              >
+                Next ›
+              </button>
+            </nav>
           }
-        </tbody>
-      </table>
+        </div>
+      }
     }
   }
 

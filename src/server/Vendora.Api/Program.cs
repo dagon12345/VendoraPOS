@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Vendora.Application.Products;
 using Vendora.Infrastructure;
+using Vendora.Infrastructure.Persistence;
 
 const string AngularDevCorsPolicy = "AngularDev";
 
@@ -33,6 +36,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
     app.UseCors(AngularDevCorsPolicy);
+
+    using var seedScope = app.Services.CreateScope();
+    var dbContext = seedScope.ServiceProvider.GetRequiredService<VendoraDbContext>();
+    await dbContext.Database.MigrateAsync();
+    var productService = seedScope.ServiceProvider.GetRequiredService<IProductService>();
+    await DbSeeder.SeedAsync(dbContext, productService);
 }
 
 app.UseHttpsRedirection();
