@@ -4,7 +4,8 @@ A cloud-based, subscription POS platform for pharmacies, small retail stores, an
 Backend: .NET (Clean Architecture + DDD + Repository pattern). Frontend: Angular.
 
 See [docs/architecture.md](docs/architecture.md) for the full design rationale and folder-by-folder explanation,
-or [docs/user-guide.md](docs/user-guide.md) for plain-language instructions on using each feature.
+[docs/user-guide.md](docs/user-guide.md) for plain-language instructions on using each feature, or
+[CONTRIBUTING.md](CONTRIBUTING.md) if you're setting up locally or opening a pull request.
 
 ## Repository layout
 
@@ -71,7 +72,14 @@ dotnet ef database update --project ../Vendora.Infrastructure --startup-project 
 
 - [x] Solution scaffolded (Clean Architecture, 4 layers)
 - [x] Angular workspace scaffolded (feature-folder layout)
-- [x] First vertical slice working end-to-end: `Product` CRUD (Domain → Application → Infrastructure → API → Angular)
+- [x] `Product` CRUD (create/edit/activate-deactivate) working end-to-end (Domain → Application → Infrastructure → API → Angular)
+- [x] `StockMovement` ledger — Restock/Adjustment/Waste/InitialStock, with a "Reverse" correction flow
+- [x] `ProductAuditLog` — records every product edit (field-level diff) and activate/deactivate
+- [x] Responsive UI (mobile/tablet), confirmation modals for edit/deactivate, in-app Help page + exportable user guide
 - [ ] Authentication / multi-tenant subscription model
-- [ ] Sales / checkout module
+- [ ] Category / other entities beyond Product — see [docs/modules/category-module.md](docs/modules/category-module.md) for a ready-to-hand-off brief
+- [ ] Sales / checkout module (will need a "Sale" stock-movement reason once built)
 - [ ] Deploy to hosting (monsterasp) + GitHub CI
+
+Note: there is deliberately no "delete a product" feature — every product picks up stock history almost
+immediately, making hard deletion impractical. **Deactivate** is the supported way to retire a product.

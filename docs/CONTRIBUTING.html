@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VendoraPOS Contributing Guide</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #1f2328; margin: 2cm; }
+  h1 { font-size: 22pt; margin-bottom: 4pt; }
+  h2 { font-size: 16pt; margin-top: 24pt; border-bottom: 1pt solid #ccc; padding-bottom: 4pt; }
+  h3 { font-size: 13pt; margin-top: 16pt; }
+  p { margin: 8pt 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10pt 0; }
+  th, td { border: 1pt solid #999; padding: 6pt 8pt; text-align: left; font-size: 11pt; vertical-align: top; }
+  th { background: #f0f0f0; }
+  pre { background: #f5f5f5; border: 1pt solid #ddd; padding: 8pt 10pt; font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; }
+  code { font-family: Consolas, monospace; background: #f0f0f0; padding: 1pt 3pt; }
+  ul { margin: 6pt 0; padding-left: 20pt; }
+  li { margin: 4pt 0; }
+  .subtitle { color: #555; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Contributing to VendoraPOS</h1>
+<p class="subtitle">Read this before opening a pull request. It covers what to install on Windows, macOS,
+or Linux, how to get running locally, and the design rules that keep this codebase consistent.</p>
+
+<h2>1. Install these first</h2>
+<p>Exact versions this project is built and tested against:</p>
+<table>
+<tr><th>Tool</th><th>Version used</th><th>Target framework / package</th></tr>
+<tr><td>.NET SDK</td><td>10.0.202</td><td><code>net10.0</code> (any 10.x SDK should work)</td></tr>
+<tr><td>Node.js</td><td>24.19.0</td><td></td></tr>
+<tr><td>npm</td><td>11.17.0</td><td>ships with Node</td></tr>
+<tr><td>Angular</td><td>22.1.x</td><td><code>@angular/core</code> + <code>@angular/cli</code>, installed via <code>npm install</code> &mdash; no separate global CLI install needed</td></tr>
+<tr><td><code>dotnet-ef</code> CLI tool</td><td>10.0.11</td><td><code>dotnet tool install --global dotnet-ef</code> (same command on every OS)</td></tr>
+<tr><td>Docker</td><td>any recent version</td><td>runs the <code>mcr.microsoft.com/mssql/server:2022-latest</code> image</td></tr>
+<tr><td>Git</td><td>any recent version</td><td></td></tr>
+</table>
+
+<h3>Windows (PowerShell)</h3>
+<pre>winget install Microsoft.DotNet.SDK.10
+winget install OpenJS.NodeJS.LTS      # or use nvm-windows: github.com/coreybutler/nvm-windows
+winget install Docker.DockerDesktop   # requires WSL2 backend enabled
+winget install Git.Git
+dotnet tool install --global dotnet-ef</pre>
+<p>Docker Desktop on Windows needs the WSL2 backend enabled (Docker Desktop will prompt you to enable it
+on first run if it isn't already). Everything else &mdash; <code>dotnet</code>, <code>npm</code>,
+<code>git</code> commands &mdash; works identically in PowerShell, CMD, or a WSL2 shell.</p>
+
+<h3>macOS (with Homebrew)</h3>
+<pre>brew install --cask dotnet-sdk
+brew install nvm &amp;&amp; nvm install 24 &amp;&amp; nvm use 24    # or: brew install node@24
+brew install --cask docker                              # Docker Desktop
+brew install git
+dotnet tool install --global dotnet-ef</pre>
+
+<h3>Linux (Debian/Ubuntu-based, e.g. Pop!_OS &mdash; what this project was built on)</h3>
+<pre># .NET SDK - see learn.microsoft.com/dotnet/core/install/linux for your distro's exact repo setup
+sudo apt-get update &amp;&amp; sudo apt-get install -y dotnet-sdk-10.0
+
+# Node via nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+nvm install 24 &amp;&amp; nvm use 24
+
+# Docker Engine
+sudo apt-get install -y docker.io
+sudo usermod -aG docker $USER   # log out/in after this so docker works without sudo
+
+sudo apt-get install -y git
+dotnet tool install --global dotnet-ef</pre>
+
+<h2>2. First-time setup</h2>
+
+<h3>Step 1 &mdash; Clone and start SQL Server</h3>
+<p>Matches the connection string already committed in
+<code>src/server/Vendora.Api/appsettings.json</code> &mdash; this is a local dev-only password, not a
+real secret. This <code>docker run</code> command is identical on Windows (PowerShell/CMD), macOS, and
+Linux:</p>
+<pre>docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" \
+  -p 1433:1433 --name eca-mssql -d mcr.microsoft.com/mssql/server:2022-latest</pre>
+<p>If you use a different container name/password, update <code>ConnectionStrings:DefaultConnection</code>
+in <code>appsettings.json</code> locally &mdash; just don't commit real production credentials there (see
+<code>.gitignore</code> &mdash; <code>appsettings.Production.json</code> is already excluded for that
+reason).</p>
+
+<h3>Step 2 &mdash; Apply migrations</h3>
+<p>From <code>src/server/Vendora.Api</code>:</p>
+<pre>dotnet ef database update --project ../Vendora.Infrastructure --startup-project .</pre>
+
+<h3>Step 3 &mdash; Run the API</h3>
+<pre>./scripts/run-api.sh          # dotnet run
+./scripts/run-api.sh watch    # dotnet watch run (auto-reload)</pre>
+<p>This frees ports 7196/5136 first, so re-running is always safe. It's a bash script &mdash; works as-is
+in a Linux/macOS terminal, or in <b>Git Bash</b> or <b>WSL2</b> on Windows. If you're in native
+PowerShell/CMD, just run <code>dotnet run --launch-profile https</code> directly instead (from
+<code>src/server/Vendora.Api</code>); if you hit a "port already in use" error, find and stop the process
+with:</p>
+<pre>Get-Process -Id (Get-NetTCPConnection -LocalPort 7196).OwningProcess | Stop-Process</pre>
+<p>Either way, you must pass <code>--launch-profile https</code> when running manually, or the Angular
+proxy won't be able to reach the API &mdash; see the README.</p>
+
+<h3>Step 4 &mdash; Run the client</h3>
+<p>From <code>src/client</code>:</p>
+<pre>npm install
+npm start</pre>
+<p>Serves on <code>http://localhost:4200</code>, proxying <code>/api/*</code> to the API.</p>
+<p>See README.md and docs/architecture.md for more detail.</p>
+
+<h2>3. Rules that keep the design intact</h2>
+<p>This is a small, deliberately consistent codebase. Please follow the existing patterns rather than
+introducing new ones &mdash; if you think a pattern needs to change, raise it in the PR description
+first.</p>
+
+<h3>Backend &mdash; Clean Architecture, strictly one-directional</h3>
+<ul>
+<li><code>Vendora.Domain</code> has <b>zero</b> dependencies &mdash; no EF Core, no ASP.NET Core types. Ever.</li>
+<li><code>Vendora.Application</code> depends on Domain only. No EF Core here either (<code>DbUpdateException</code> etc. stay in Infrastructure).</li>
+<li><code>Vendora.Infrastructure</code> depends on Application + Domain; this is the only layer allowed to know about EF Core.</li>
+<li><code>Vendora.Api</code> depends on Application + Infrastructure; controllers stay thin &mdash; one action per use case, translate results to HTTP status codes, no business logic.</li>
+<li>Entities: private constructor + a static <code>Create(...)</code> factory that enforces invariants. Behavior lives on the entity as methods (<code>AdjustStock</code>, <code>Deactivate</code>, <code>UpdateDetails</code>) &mdash; never public setters, never business logic in a service that could live on the entity.</li>
+<li>Immutable ledger entities (<code>StockMovement</code>, <code>ProductAuditLog</code>) never get an Update/mutation method &mdash; they're an append-only audit trail. Don't add editing to these; if a past entry is wrong, the pattern is a compensating entry (see the "Reverse" flow), not editing history.</li>
+<li>One repository per aggregate root, implementing the generic <code>IRepository&lt;T&gt;</code>. Repositories sharing a <code>DbContext</code> can flush each other's pending changes via a single <code>SaveChangesAsync()</code> call &mdash; you don't need a separate call per repository.</li>
+</ul>
+
+<h3>Frontend &mdash; Angular, standalone components</h3>
+<ul>
+<li>No NgModules. Standalone components only, matching what's already there.</li>
+<li>Local component state via <code>signal()</code>, not manual fields + <code>ChangeDetectorRef</code>.</li>
+<li>Reactive forms (<code>FormBuilder</code>) for anything with validation.</li>
+<li>Use <code>inject()</code> for dependencies in components that also build a form field with <code>fb.group(...)</code> &mdash; field initializers run before constructor-injected params are assigned, so constructor injection breaks there. Plain services (<code>ProductService</code>, etc.) still use constructor injection &mdash; match whichever file you're editing.</li>
+<li><b>Reuse the existing design-system classes</b> in <code>src/client/src/styles.scss</code> (<code>.btn</code>/<code>.btn-primary</code>/<code>.btn-danger</code>/<code>.btn-outline</code>, <code>.field</code>, <code>.responsive-table</code>, <code>.error</code>/<code>.error-banner</code>/<code>.muted</code>) instead of writing new one-off CSS for buttons, forms, or tables.</li>
+<li>Anything with a table must work on mobile &mdash; use the <code>.responsive-table</code> class + <code>data-label</code> attributes on <code>&lt;td&gt;</code>s (see <code>product-list.html</code> or <code>product-stock-history.html</code> for the pattern), and check it at &lt;640px width before calling it done.</li>
+</ul>
+
+<h3>Don't speculate ahead of the current module</h3>
+<p>No <code>Sale</code> stock-movement reason, no <code>TenantId</code>, no auth-related fields &mdash;
+those belong to modules that don't exist yet (see README's Status list) and should be designed when that
+module is actually built, not guessed at now.</p>
+
+<h3>Docs</h3>
+<p>Every user-facing feature gets a new section in <code>docs/user-guide.md</code> <b>and</b>
+<code>src/client/src/app/features/help/help.html</code> (the in-app Help page) <b>and</b>
+<code>docs/user-guide.html</code> (source for the PDF/Word exports in <code>docs/exports/</code>) &mdash;
+all three need to stay in sync.</p>
+
+<h3>Before opening a PR</h3>
+<ul>
+<li><code>dotnet build</code> and <code>cd src/client &amp;&amp; npx ng build</code> both need to pass cleanly.</li>
+<li>Click through the feature manually at least once &mdash; type checking isn't the same as it actually working.</li>
+<li><code>master</code> is protected &mdash; you can't push directly to it. Branch, push, open a PR, and wait for review/approval.</li>
+</ul>
+
+</body>
+</html>
