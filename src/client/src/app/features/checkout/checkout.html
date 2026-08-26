@@ -1,0 +1,210 @@
+<section class="checkout">
+  <h1>Checkout</h1>
+
+  @if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  } @else if (loading()) {
+    <p>Loading…</p>
+  } @else {
+    <div class="checkout-layout">
+      <div class="products-pane">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input
+              #searchInput
+              type="search"
+              class="search-input"
+              placeholder="Search by name, SKU, or scan a barcode…"
+              [value]="searchTerm()"
+              (input)="onSearchInput($any($event.target).value)"
+              (keydown.enter)="onSearchEnter()"
+              (keydown.escape)="clearSearch()"
+            />
+            <span class="kbd-badge" title="Jump to search from anywhere">Ctrl+F</span>
+          </div>
+          <p class="search-hint muted">
+            <span class="kbd">Enter</span> add match ·
+            <span class="kbd">Esc</span> clear
+          </p>
+        </div>
+
+        @if (filteredProducts().length === 0) {
+          <p class="muted">No products match "{{ searchTerm() }}".</p>
+        } @else {
+          <div class="product-scroll">
+            <div class="product-grid">
+              @for (product of pagedProducts(); track product.id) {
+                <button type="button" class="product-card" (click)="addToCart(product)">
+                  @if (product.imageUrl) {
+                    <img class="product-image" [src]="product.imageUrl" [alt]="product.name" />
+                  } @else {
+                    <div class="product-image placeholder" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="M21 15l-5-5L5 21" />
+                      </svg>
+                    </div>
+                  }
+                  <span class="name">{{ product.name }}</span>
+                  <span class="sku">{{ product.sku }}</span>
+                  <span class="price">{{ product.price | number: '1.2-2' }}</span>
+                  <span class="stock">{{ product.quantityOnHand }} in stock</span>
+                  @if (product.barcode) {
+                    <svg class="barcode" [appBarcode]="product.barcode"></svg>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="pagination">
+            <label class="page-size">
+              Rows per page:
+              <select [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size">{{ size }}</option>
+                }
+              </select>
+            </label>
+
+            @if (totalPages() > 1) {
+              <nav class="page-nav" aria-label="Pagination">
+                <button type="button" class="btn btn-outline" [disabled]="currentPage() === 1" (click)="previousPage()">
+                  ‹ Previous
+                </button>
+
+                @for (page of pageNumbers(); track $index) {
+                  @if (page === '...') {
+                    <span class="ellipsis">…</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn"
+                      [class.btn-primary]="page === currentPage()"
+                      [class.btn-outline]="page !== currentPage()"
+                      (click)="goToPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                }
+
+                <button
+                  type="button"
+                  class="btn btn-outline"
+                  [disabled]="currentPage() === totalPages()"
+                  (click)="nextPage()"
+                >
+                  Next ›
+                </button>
+              </nav>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="cart-pane">
+        @if (submitError()) {
+          <div class="error-banner">
+            <span>{{ submitError() }}</span>
+            <button type="button" class="btn btn-outline" (click)="dismissSubmitError()">Dismiss</button>
+          </div>
+        }
+
+        <div class="cart-heading">
+          <h2>Current Transaction</h2>
+          @if (cart().length > 0) {
+            <span class="kbd-badge" title="Edit the top item's quantity from anywhere (optional - tap/click works too)">Ctrl+Q edit qty</span>
+          }
+        </div>
+
+        @if (cart().length === 0) {
+          <p class="muted">Cart is empty — tap a product to add it.</p>
+        } @else {
+          <ul class="cart-list">
+            @for (line of cart(); track line.productId) {
+              <li class="cart-item">
+                <div class="cart-item-info">
+                  <span class="name">{{ line.productName }}</span>
+                  <span class="muted">{{ line.unitPrice | number: '1.2-2' }} each</span>
+                </div>
+                <input
+                  #qtyInput
+                  type="number"
+                  min="1"
+                  class="qty-input"
+                  [value]="line.quantity"
+                  (input)="updateQuantity(line.productId, +$any($event.target).value)"
+                  (focus)="selectOnFocus($any($event.target))"
+                  (blur)="syncQtyDisplay($any($event.target), line)"
+                  (keydown.enter)="onFieldEnterConfirm($any($event.target))"
+                />
+                <span class="line-total">{{ line.unitPrice * line.quantity | number: '1.2-2' }}</span>
+                <button type="button" class="btn btn-outline remove-btn" (click)="removeFromCart(line.productId)">✕</button>
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- Always visible, even with an empty cart, so the transaction panel (payment method,
+             total, Complete Sale) reads as a permanent part of the screen rather than something
+             that only appears after the first item is added. -->
+        <div class="checkout-summary">
+          <div class="field">
+            <label for="paymentMethod">Payment method</label>
+            <select id="paymentMethod" [value]="paymentMethod()" (change)="onPaymentMethodChange($any($event.target).value)">
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+            </select>
+          </div>
+
+          @if (paymentMethod() === 'Cash') {
+            <div class="field">
+              <label for="amountTendered">
+                Amount tendered
+                <span class="kbd-badge" title="Jump to this field from anywhere">Ctrl+M</span>
+              </label>
+              <input
+                #amountTenderedInput
+                id="amountTendered"
+                type="number"
+                step="0.01"
+                min="0"
+                [value]="amountTendered()"
+                (input)="onAmountTenderedInput($any($event.target).value)"
+                (focus)="selectOnFocus($any($event.target))"
+                (keydown.enter)="onFieldEnterConfirm($any($event.target))"
+              />
+              @if (amountTendered() < totalAmount()) {
+                <span class="field-error">Amount tendered must cover the total.</span>
+              }
+            </div>
+          }
+
+          <p class="total-line">Total: <strong>{{ totalAmount() | number: '1.2-2' }}</strong></p>
+          @if (changeDue() !== null) {
+            <p class="total-line">Change due: <strong>{{ changeDue() | number: '1.2-2' }}</strong></p>
+          }
+
+          <button type="button" class="btn btn-primary" [disabled]="!canSubmit() || saving()" (click)="requestSubmit()">
+            {{ saving() ? 'Completing sale…' : 'Complete Sale' }}
+            <span class="kbd-badge on-primary">Ctrl+Enter</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <app-confirm-dialog
+      [open]="confirmingSale()"
+      title="Complete sale"
+      [message]="confirmSaleMessage()"
+      confirmLabel="Complete Sale"
+      confirmingLabel="Completing…"
+      [danger]="false"
+      [confirming]="saving()"
+      (confirmed)="confirmSubmit()"
+      (cancelled)="cancelSubmit()"
+    />
+  }
+</section>

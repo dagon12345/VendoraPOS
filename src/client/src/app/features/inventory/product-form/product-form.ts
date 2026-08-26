@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../../core/services/product';
+import { UploadService } from '../../../core/services/upload';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 
 @Component({
@@ -14,13 +15,18 @@ import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 export class ProductForm implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly productService = inject(ProductService);
+  private readonly uploadService = inject(UploadService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
 
   readonly isEditMode = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly confirmingSave = signal(false);
+  readonly uploadingImage = signal(false);
+  readonly imageError = signal<string | null>(null);
 
   private productId: string | null = null;
 
@@ -30,6 +36,9 @@ export class ProductForm implements OnInit {
     price: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0.01)]),
     initialQuantity: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
     description: this.fb.control<string | null>(null),
+    barcode: this.fb.control<string | null>(null),
+    imageUrl: this.fb.control<string | null>(null),
+    expiryDate: this.fb.control<string | null>(null),
   });
 
   ngOnInit(): void {
@@ -47,6 +56,9 @@ export class ProductForm implements OnInit {
             name: product.name,
             price: product.price,
             description: product.description,
+            barcode: product.barcode,
+            imageUrl: product.imageUrl,
+            expiryDate: product.expiryDate,
           });
         },
         error: () => this.error.set('Could not load this product.'),
@@ -88,6 +100,9 @@ export class ProductForm implements OnInit {
           name: value.name,
           price: value.price,
           description: value.description,
+          barcode: value.barcode,
+          imageUrl: value.imageUrl,
+          expiryDate: value.expiryDate,
         })
       : this.productService.create({
           sku: value.sku,
@@ -95,6 +110,9 @@ export class ProductForm implements OnInit {
           price: value.price,
           initialQuantity: value.initialQuantity,
           description: value.description,
+          barcode: value.barcode,
+          imageUrl: value.imageUrl,
+          expiryDate: value.expiryDate,
         });
 
     request$.subscribe({
@@ -108,5 +126,39 @@ export class ProductForm implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/products']);
+  }
+
+  selectImage(): void {
+    this.fileInputRef?.nativeElement.click();
+  }
+
+  /** Uploads the picked file (from the device's own gallery/photo picker/file browser -
+   *  whatever the OS presents for `accept="image/*"`) to the API, which stores it on this
+   *  machine's local disk and hands back a URL we drop straight into the form. */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-selecting the same file later
+    if (!file) {
+      return;
+    }
+
+    this.imageError.set(null);
+    this.uploadingImage.set(true);
+
+    this.uploadService.uploadProductImage(file).subscribe({
+      next: (result) => {
+        this.form.patchValue({ imageUrl: result.url });
+        this.uploadingImage.set(false);
+      },
+      error: (err) => {
+        this.imageError.set(typeof err?.error === 'string' ? err.error : 'Could not upload this image.');
+        this.uploadingImage.set(false);
+      },
+    });
+  }
+
+  removeImage(): void {
+    this.form.patchValue({ imageUrl: null });
   }
 }

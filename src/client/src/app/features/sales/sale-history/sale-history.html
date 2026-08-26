@@ -1,0 +1,85 @@
+<section class="sale-history page-fixed">
+  <div class="list-header">
+    <h1>Sales</h1>
+    <a class="btn btn-primary" routerLink="/checkout">+ New Sale</a>
+  </div>
+
+  @if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  } @else if (loading()) {
+    <p>Loading…</p>
+  } @else if (sales().length === 0) {
+    <p class="muted">No sales yet.</p>
+  } @else {
+    <div class="page-scroll">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sale of pagedSales(); track sale.id) {
+            <tr>
+              <td data-label="Date">{{ sale.createdAtUtc | date: 'medium' }}</td>
+              <td data-label="Total">{{ sale.totalAmount | number: '1.2-2' }}</td>
+              <td data-label="Payment">{{ sale.paymentMethod }}</td>
+              <td data-label="Status">{{ sale.isVoided ? 'Voided' : 'Completed' }}</td>
+              <td class="actions">
+                <a class="btn btn-outline" [routerLink]="['/sales', sale.id]">View</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <label class="page-size">
+        Rows per page:
+        <select [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </label>
+
+      @if (totalPages() > 1) {
+        <nav class="page-nav" aria-label="Pagination">
+          <button type="button" class="btn btn-outline" [disabled]="currentPage() === 1" (click)="previousPage()">
+            ‹ Previous
+          </button>
+
+          @for (page of pageNumbers(); track $index) {
+            @if (page === '...') {
+              <span class="ellipsis">…</span>
+            } @else {
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="page === currentPage()"
+                [class.btn-outline]="page !== currentPage()"
+                (click)="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+            }
+          }
+
+          <button
+            type="button"
+            class="btn btn-outline"
+            [disabled]="currentPage() === totalPages()"
+            (click)="nextPage()"
+          >
+            Next ›
+          </button>
+        </nav>
+      }
+    </div>
+  }
+</section>

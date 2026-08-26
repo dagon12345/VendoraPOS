@@ -25,6 +25,13 @@ export class ConfirmDialog {
     }
   }
 
+  @HostListener('document:keydown.enter')
+  onEnter(): void {
+    if (this.open && !this.confirming) {
+      this.confirmed.emit();
+    }
+  }
+
   onBackdropClick(): void {
     if (!this.confirming) {
       this.cancelled.emit();

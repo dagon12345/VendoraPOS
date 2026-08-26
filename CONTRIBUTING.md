@@ -104,7 +104,10 @@ dotnet ef database update --project ../Vendora.Infrastructure --startup-project 
 npm install
 npm start
 ```
-Serves on `http://localhost:4200`, proxying `/api/*` to the API.
+Serves on `http://localhost:4200`, proxying `/api/*` and `/uploads/*` to the API (see
+`proxy.conf.json`). **If you edit `proxy.conf.json`, stop and re-run `npm start`** — Angular's dev
+server only reads that file once at startup, so a running instance won't pick up new proxy rules
+until it's restarted.
 
 See [README.md](README.md) and [docs/architecture.md](docs/architecture.md) for more detail.
 
@@ -129,6 +132,7 @@ introducing new ones — if you think a pattern needs to change, raise it in the
 - Use `inject()` for dependencies in components that also build a form field with `fb.group(...)` — field initializers run before constructor-injected params are assigned, so constructor injection breaks there. Plain services (`ProductService`, etc.) still use constructor injection — match whichever file you're editing.
 - **Reuse the existing design-system classes** in `src/client/src/styles.scss` (`.btn`/`.btn-primary`/`.btn-danger`/`.btn-outline`, `.field`, `.responsive-table`, `.error`/`.error-banner`/`.muted`) instead of writing new one-off CSS for buttons, forms, or tables.
 - Anything with a table must work on mobile — use the `.responsive-table` class + `data-label` attributes on `<td>`s (see `product-list.html` or `product-stock-history.html` for the pattern), and check it at <640px width before calling it done.
+- **Every list/table page uses the fixed-viewport `.page-fixed` layout** — the page itself never grows past the visible screen or produces its own page-level scrollbar, no matter how much data it holds. Add `class="page-fixed"` to the page's root element, and wrap exactly one child (usually the table) in `<div class="page-scroll">` — everything else (heading, search/toolbar, pagination) stays fixed in place while only that wrapped part scrolls internally. See `product-list.html`/`sale-history.html` for the pattern (defined once in `styles.scss`, relaxes to normal full-page scroll under 640px since a cramped internal scroll region doesn't feel natural on a phone). Checkout uses a bespoke variant of the same idea (`checkout.scss`) since it has two independently-scrolling panes instead of one (product grid, current-transaction cart) — same principle, applied twice, and deliberately *not* relaxed on phones like `.page-fixed` is, since the transaction panel needs to stay visible at all times regardless of screen size.
 
 **Don't speculate ahead of the current module:**
 - No `Sale` stock-movement reason, no `TenantId`, no auth-related fields — those belong to modules that don't exist yet (see README's Status list) and should be designed when that module is actually built, not guessed at now.

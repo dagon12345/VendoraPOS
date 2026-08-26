@@ -1,0 +1,104 @@
+<section class="stock-alerts page-fixed">
+  <div class="list-header">
+    <h1>Stock Alerts</h1>
+    <a class="btn btn-outline" routerLink="/products">← Back to Products</a>
+  </div>
+
+  @if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  } @else if (loading()) {
+    <p>Loading…</p>
+  } @else {
+    <div class="page-scroll">
+      <section class="alert-section">
+        <h2>Low stock <span class="muted">({{ lowStockThreshold }} units or fewer)</span></h2>
+        @if (lowStockProducts().length === 0) {
+          <p class="muted">Nothing is low on stock right now.</p>
+        } @else {
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Qty on hand</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of lowStockProducts(); track product.id) {
+                <tr>
+                  <td data-label="SKU">{{ product.sku }}</td>
+                  <td data-label="Name">{{ product.name }}</td>
+                  <td data-label="Qty on hand" class="text-danger">{{ product.quantityOnHand }}</td>
+                  <td class="actions">
+                    <a class="btn btn-outline" [routerLink]="['/products', product.id, 'history']">Restock</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <section class="alert-section">
+        <h2>Expired</h2>
+        @if (expiredProducts().length === 0) {
+          <p class="muted">Nothing has expired.</p>
+        } @else {
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Expired on</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of expiredProducts(); track product.id) {
+                <tr>
+                  <td data-label="SKU">{{ product.sku }}</td>
+                  <td data-label="Name">{{ product.name }}</td>
+                  <td data-label="Expired on" class="text-danger">{{ product.expiryDate | date: 'mediumDate' }}</td>
+                  <td class="actions">
+                    <a class="btn btn-outline" [routerLink]="['/products', product.id, 'edit']">Edit</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <section class="alert-section">
+        <h2>Expiring soon <span class="muted">(within {{ expiringSoonDays }} days)</span></h2>
+        @if (expiringSoonProducts().length === 0) {
+          <p class="muted">Nothing is expiring soon.</p>
+        } @else {
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Expires on</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of expiringSoonProducts(); track product.id) {
+                <tr>
+                  <td data-label="SKU">{{ product.sku }}</td>
+                  <td data-label="Name">{{ product.name }}</td>
+                  <td data-label="Expires on" class="text-warning">{{ product.expiryDate | date: 'mediumDate' }}</td>
+                  <td class="actions">
+                    <a class="btn btn-outline" [routerLink]="['/products', product.id, 'edit']">Edit</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    </div>
+  }
+</section>

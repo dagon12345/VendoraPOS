@@ -1,4 +1,4 @@
-export type StockMovementReason = 'InitialStock' | 'Restock' | 'Adjustment' | 'Waste';
+export type StockMovementReason = 'InitialStock' | 'Restock' | 'Adjustment' | 'Waste' | 'Sale';
 
 export interface StockMovement {
   id: string;

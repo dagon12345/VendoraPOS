@@ -1,0 +1,178 @@
+<section class="sale-detail">
+  @if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  } @else if (loading()) {
+    <p>Loading…</p>
+  } @else if (sale(); as s) {
+    <div class="list-header">
+      <h1>Sale receipt</h1>
+      <a class="btn btn-outline" routerLink="/sales">Back to sales</a>
+    </div>
+
+    @if (actionError()) {
+      <div class="error-banner">
+        <span>{{ actionError() }}</span>
+        <button type="button" class="btn btn-outline" (click)="dismissActionError()">Dismiss</button>
+      </div>
+    }
+
+    @if (s.isVoided) {
+      <div class="error-banner">
+        <span>
+          This sale was voided{{ s.voidedAtUtc ? ' on ' + (s.voidedAtUtc | date: 'medium') : '' }}{{ s.voidReason ? ' — ' + s.voidReason : '' }}.
+          Voided by mistake? <button type="button" class="btn btn-outline" (click)="requestRestore()">Restore this sale</button>
+        </span>
+      </div>
+    }
+
+    <p class="muted">{{ s.createdAtUtc | date: 'medium' }} · {{ s.paymentMethod }}</p>
+
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Unit price</th>
+          <th>Quantity</th>
+          <th>Line total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of s.lines; track line.productId) {
+          <tr>
+            <td data-label="Product">{{ line.productName }}</td>
+            <td data-label="Unit price">{{ line.unitPrice | number: '1.2-2' }}</td>
+            <td data-label="Quantity">
+              {{ line.quantity }}
+              @if (line.voidedQuantity > 0) {
+                <span class="muted">
+                  ({{ line.voidedQuantity }} returned)
+                  @if (!s.isVoided) {
+                    <button type="button" class="btn btn-outline" (click)="requestRestoreLine(line)">Undo</button>
+                  }
+                </span>
+              }
+            </td>
+            <td data-label="Line total">{{ line.lineTotal | number: '1.2-2' }}</td>
+            <td class="actions">
+              @if (!s.isVoided && line.activeQuantity > 0) {
+                <button type="button" class="btn btn-outline" (click)="requestVoidLine(line)">Return…</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="receipt-summary">
+      <p class="total-line">Total: <strong>{{ s.totalAmount | number: '1.2-2' }}</strong></p>
+      @if (s.amountTendered !== null) {
+        <p class="total-line">Amount tendered: <strong>{{ s.amountTendered | number: '1.2-2' }}</strong></p>
+      }
+      @if (s.changeDue !== null) {
+        <p class="total-line">Change due: <strong>{{ s.changeDue | number: '1.2-2' }}</strong></p>
+      }
+      @if (s.refundedAmount > 0 && !s.isVoided) {
+        <p class="total-line">Refunded: <strong>{{ s.refundedAmount | number: '1.2-2' }}</strong></p>
+        <p class="total-line">Net total: <strong>{{ s.netTotal | number: '1.2-2' }}</strong></p>
+      }
+    </div>
+
+    @if (!s.isVoided) {
+      <button type="button" class="btn btn-danger" (click)="requestVoid()">Void this sale</button>
+    }
+
+    <app-confirm-dialog
+      [open]="confirmingVoid()"
+      title="Void sale"
+      message="Void this sale? This will restore the stock it deducted. You can restore the sale afterward if this was a mistake."
+      confirmLabel="Void sale"
+      confirmingLabel="Voiding…"
+      [confirming]="voiding()"
+      (confirmed)="confirmVoid()"
+      (cancelled)="cancelVoid()"
+    />
+
+    <app-confirm-dialog
+      [open]="confirmingRestore()"
+      title="Restore sale"
+      message="Restore this sale? It will be marked active again and its stock re-deducted."
+      confirmLabel="Restore sale"
+      confirmingLabel="Restoring…"
+      [danger]="false"
+      [confirming]="restoring()"
+      (confirmed)="confirmRestore()"
+      (cancelled)="cancelRestore()"
+    />
+
+    @if (returningLine(); as line) {
+      <app-confirm-dialog
+        [open]="true"
+        title="Return item"
+        [message]="'Returning ' + line.productName + '. This restocks the returned quantity and leaves the rest of this sale untouched.'"
+        confirmLabel="Confirm return"
+        confirmingLabel="Returning…"
+        [danger]="false"
+        [confirming]="returningLineSaving()"
+        (confirmed)="confirmVoidLine()"
+        (cancelled)="cancelVoidLine()"
+      >
+        <div class="field">
+          <label for="returnQuantity">Quantity to return (of {{ line.activeQuantity }} active)</label>
+          <input
+            id="returnQuantity"
+            type="number"
+            min="1"
+            [max]="line.activeQuantity"
+            [value]="returnQuantity()"
+            (input)="onReturnQuantityInput($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label for="returnReason">Reason (optional)</label>
+          <input
+            id="returnReason"
+            type="text"
+            placeholder="e.g. Wrong item, customer changed mind"
+            (input)="onReturnReasonInput($any($event.target).value)"
+          />
+        </div>
+      </app-confirm-dialog>
+    }
+
+    @if (restoringLine(); as line) {
+      <app-confirm-dialog
+        [open]="true"
+        title="Undo return"
+        [message]="'Undo the return of ' + line.productName + '. This re-deducts the stock that was restocked when it was returned.'"
+        confirmLabel="Confirm undo"
+        confirmingLabel="Undoing…"
+        [danger]="false"
+        [confirming]="restoringLineSaving()"
+        (confirmed)="confirmRestoreLine()"
+        (cancelled)="cancelRestoreLine()"
+      >
+        <div class="field">
+          <label for="restoreLineQuantity">Quantity to undo (of {{ line.voidedQuantity }} returned)</label>
+          <input
+            id="restoreLineQuantity"
+            type="number"
+            min="1"
+            [max]="line.voidedQuantity"
+            [value]="restoreLineQuantity()"
+            (input)="onRestoreLineQuantityInput($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label for="restoreLineReason">Reason (optional)</label>
+          <input
+            id="restoreLineReason"
+            type="text"
+            placeholder="e.g. Return was recorded by mistake"
+            (input)="onRestoreLineReasonInput($any($event.target).value)"
+          />
+        </div>
+      </app-confirm-dialog>
+    }
+  }
+</section>

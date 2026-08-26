@@ -3,6 +3,7 @@
     <div class="dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
       <h2>{{ title }}</h2>
       <p>{{ message }}</p>
+      <ng-content></ng-content>
       <div class="dialog-actions">
         <button type="button" class="btn btn-outline" [disabled]="confirming" (click)="cancelled.emit()">
           {{ cancelLabel }}

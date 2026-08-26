@@ -21,8 +21,8 @@ public class StockMovement : BaseEntity
         if (productId == Guid.Empty) throw new ArgumentException("ProductId is required.", nameof(productId));
         if (quantityDelta == 0) throw new ArgumentException("Quantity delta cannot be zero.", nameof(quantityDelta));
 
-        // Restock/InitialStock always add stock; Waste always removes it. Only Adjustment
-        // (a correction after finding the recorded count wrong) can go either direction.
+        // Restock/InitialStock always add stock; Waste always removes it. Adjustment (a manual
+        // correction) and Sale (negative when sold, positive when a sale is voided) can go either way.
         if (reason is StockMovementReason.Restock or StockMovementReason.InitialStock && quantityDelta < 0)
             throw new ArgumentException($"{reason} must increase stock (quantity must be positive).", nameof(quantityDelta));
         if (reason == StockMovementReason.Waste && quantityDelta > 0)

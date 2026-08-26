@@ -2,9 +2,11 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 0.75rem 1.5rem;
+  height: var(--header-height);
+  padding: 0 1.5rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
 
   .brand {
     font-weight: 700;
@@ -38,7 +40,7 @@
 
 @media (max-width: 640px) {
   .app-header {
-    padding: 0.65rem 1rem;
+    padding: 0 1rem;
     gap: 1rem;
   }
 

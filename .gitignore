@@ -21,3 +21,6 @@ dist/
 **/appsettings.Production.json
 **/appsettings.*.local.json
 *.pfx
+
+# User-uploaded content - lives on each machine's local disk, not in source control
+**/wwwroot/uploads/

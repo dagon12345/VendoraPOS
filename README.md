@@ -76,9 +76,11 @@ dotnet ef database update --project ../Vendora.Infrastructure --startup-project 
 - [x] `StockMovement` ledger — Restock/Adjustment/Waste/InitialStock, with a "Reverse" correction flow
 - [x] `ProductAuditLog` — records every product edit (field-level diff) and activate/deactivate
 - [x] Responsive UI (mobile/tablet), confirmation modals for edit/deactivate, in-app Help page + exportable user guide
+- [x] Product list search + pagination (10–100 rows/page); automatic DB migration + 20-product seed on API startup
+- [x] `Sale` / Checkout — cart-based checkout (Cash/Card), sale history + receipt view, basic void (restores stock, never deletes the record)
 - [ ] Authentication / multi-tenant subscription model
 - [ ] Category / other entities beyond Product — see [docs/modules/category-module.md](docs/modules/category-module.md) for a ready-to-hand-off brief
-- [ ] Sales / checkout module (will need a "Sale" stock-movement reason once built)
+- [ ] Partial refunds (only whole-sale void exists today)
 - [ ] Deploy to hosting (monsterasp) + GitHub CI
 
 Note: there is deliberately no "delete a product" feature — every product picks up stock history almost

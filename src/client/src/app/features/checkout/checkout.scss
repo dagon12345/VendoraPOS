@@ -1,0 +1,298 @@
+// The checkout page never produces its own page-level scrollbar, on any screen size or
+// orientation - the transaction panel is meant to read as a permanent, stationary part of the
+// screen. `.checkout` is pinned to exactly the remaining viewport height; internally, the parts
+// that can grow long (the product grid, the cart's item list) scroll on their own, while
+// everything else (search box, pagination, payment/Complete Sale) stays fixed in place.
+.checkout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height) - 3rem); // 3rem = .app-main's top+bottom padding
+  overflow: hidden;
+
+  h1 {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .checkout-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .products-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .toolbar {
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+  }
+
+  // Only the grid scrolls; the search box above it and the pagination bar below it stay put.
+  .product-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .pagination {
+    flex-shrink: 0;
+  }
+
+  .cart-pane {
+    // A capped share of the stacked layout's height on portrait/mobile, so it's always visible
+    // without needing the products area to shrink to nothing; sized properly by the row layout
+    // in landscape instead (see media query below).
+    flex: 0 1 auto;
+    max-height: 45vh;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-input {
+    padding-right: 4.5rem;
+  }
+
+  .search-wrap .kbd-badge {
+    position: absolute;
+    top: 50%;
+    right: 0.6rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .search-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    min-height: 160px;
+    padding: 0.65rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover,
+    &:active {
+      border-color: var(--color-primary);
+      background: #f8faff;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 64px;
+      object-fit: contain;
+      object-position: center;
+      border-radius: calc(var(--radius) - 2px);
+      margin-bottom: 0.35rem;
+      background: var(--color-bg);
+    }
+
+    .product-image.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+    }
+
+    .name {
+      font-weight: 500;
+      line-height: 1.2;
+      font-size: 0.9rem;
+    }
+
+    .sku,
+    .stock {
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+    }
+
+    .price {
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .barcode {
+      width: 100%;
+      height: 24px;
+      margin-top: auto;
+    }
+  }
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 0;
+  }
+
+  .cart-heading {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  // The item list scrolls internally; the summary/Complete Sale button stays pinned below it
+  // regardless of how many items are in the cart.
+  .cart-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0 0.15rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+
+    .cart-item-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+
+      .name {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .muted {
+        font-size: 0.75rem;
+      }
+    }
+
+    .line-total {
+      font-weight: 600;
+      min-width: 4.5rem;
+      text-align: right;
+    }
+
+    .remove-btn {
+      min-height: 36px;
+      min-width: 36px;
+      padding: 0;
+    }
+  }
+
+  .qty-input {
+    min-height: 40px;
+    width: 64px;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font: inherit;
+    flex-shrink: 0;
+  }
+
+  .checkout-summary {
+    flex-shrink: 0;
+    padding: 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+
+    .field {
+      margin-bottom: 1rem;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+    }
+
+    select {
+      min-height: 44px;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font: inherit;
+      font-size: 16px;
+      width: 100%;
+    }
+  }
+
+  .checkout-summary .btn {
+    width: 100%;
+    margin-top: 0.75rem;
+    position: relative;
+  }
+
+  .kbd-badge.on-primary {
+    position: static;
+    transform: none;
+    margin-left: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: white;
+  }
+
+  // Tablet landscape and up: two panes side by side instead of stacked - cards on the left
+  // (smaller, to fit more columns), the current transaction pinned to the right at full pane
+  // height instead of the portrait mode's capped share.
+  @media (min-width: 768px) and (orientation: landscape) {
+    .checkout-layout {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .products-pane {
+      flex: 3;
+    }
+
+    .cart-pane {
+      flex: 2;
+      max-height: none;
+    }
+
+    .product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+
+    .product-card {
+      min-height: 140px;
+      padding: 0.5rem;
+    }
+  }
+}

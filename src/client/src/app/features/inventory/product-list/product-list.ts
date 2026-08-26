@@ -1,9 +1,11 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../../core/services/product';
+import { StockRealtimeService } from '../../../core/services/stock-realtime';
 import { Product } from '../../../core/models/product.model';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
+import { isExpired, isExpiringSoon, isLowStock } from '../../../core/constants/inventory-thresholds';
 
 @Component({
   imports: [CommonModule, RouterLink, ConfirmDialog],
@@ -60,7 +62,20 @@ export class ProductList implements OnInit {
     return pages;
   });
 
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly stockRealtime: StockRealtimeService,
+  ) {
+    // Live stock updates from other terminals (a sale/void/restock elsewhere) - patches this
+    // screen's own product list in place. Harmless no-op if the product isn't currently loaded.
+    effect(() => {
+      const change = this.stockRealtime.lastChange();
+      if (!change) return;
+      this.products.update((products) =>
+        products.map((p) => (p.id === change.productId ? { ...p, quantityOnHand: change.quantityOnHand } : p)),
+      );
+    });
+  }
 
   ngOnInit(): void {
     this.load();
@@ -80,6 +95,10 @@ export class ProductList implements OnInit {
       },
     });
   }
+
+  readonly isLowStock = isLowStock;
+  readonly isExpired = isExpired;
+  readonly isExpiringSoon = isExpiringSoon;
 
   dismissActionError(): void {
     this.actionError.set(null);

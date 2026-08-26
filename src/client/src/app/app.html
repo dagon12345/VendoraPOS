@@ -2,9 +2,13 @@
   <span class="brand">VendoraPOS</span>
   <nav>
     <a routerLink="/products" routerLinkActive="active">Products</a>
+    <a routerLink="/products/alerts" routerLinkActive="active">⚠ Stock Alerts</a>
+    <a routerLink="/checkout" routerLinkActive="active">Checkout</a>
+    <a routerLink="/sales" routerLinkActive="active">Sales</a>
     <a routerLink="/help" routerLinkActive="active">Help</a>
   </nav>
 </header>
 <main class="app-main">
   <router-outlet />
 </main>
+<app-toast-container />

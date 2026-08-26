@@ -108,7 +108,10 @@ at), from <code>src/server/Vendora.Api</code>:</p>
 <p>From <code>src/client</code>:</p>
 <pre>npm install
 npm start</pre>
-<p>Serves on <code>http://localhost:4200</code>, proxying <code>/api/*</code> to the API.</p>
+<p>Serves on <code>http://localhost:4200</code>, proxying <code>/api/*</code> and <code>/uploads/*</code>
+to the API (see <code>proxy.conf.json</code>). <b>If you edit <code>proxy.conf.json</code>, stop and
+re-run <code>npm start</code></b> &mdash; Angular's dev server only reads that file once at startup, so a
+running instance won't pick up new proxy rules until it's restarted.</p>
 <p>See README.md and docs/architecture.md for more detail.</p>
 
 <h2>3. Rules that keep the design intact</h2>
@@ -135,6 +138,7 @@ first.</p>
 <li>Use <code>inject()</code> for dependencies in components that also build a form field with <code>fb.group(...)</code> &mdash; field initializers run before constructor-injected params are assigned, so constructor injection breaks there. Plain services (<code>ProductService</code>, etc.) still use constructor injection &mdash; match whichever file you're editing.</li>
 <li><b>Reuse the existing design-system classes</b> in <code>src/client/src/styles.scss</code> (<code>.btn</code>/<code>.btn-primary</code>/<code>.btn-danger</code>/<code>.btn-outline</code>, <code>.field</code>, <code>.responsive-table</code>, <code>.error</code>/<code>.error-banner</code>/<code>.muted</code>) instead of writing new one-off CSS for buttons, forms, or tables.</li>
 <li>Anything with a table must work on mobile &mdash; use the <code>.responsive-table</code> class + <code>data-label</code> attributes on <code>&lt;td&gt;</code>s (see <code>product-list.html</code> or <code>product-stock-history.html</code> for the pattern), and check it at &lt;640px width before calling it done.</li>
+<li><b>Every list/table page uses the fixed-viewport <code>.page-fixed</code> layout</b> &mdash; the page itself never grows past the visible screen or produces its own page-level scrollbar, no matter how much data it holds. Add <code>class="page-fixed"</code> to the page's root element, and wrap exactly one child (usually the table) in <code>&lt;div class="page-scroll"&gt;</code> &mdash; everything else (heading, search/toolbar, pagination) stays fixed in place while only that wrapped part scrolls internally. See <code>product-list.html</code>/<code>sale-history.html</code> for the pattern (defined once in <code>styles.scss</code>, relaxes to normal full-page scroll under 640px since a cramped internal scroll region doesn't feel natural on a phone). Checkout uses a bespoke variant of the same idea (<code>checkout.scss</code>) since it has two independently-scrolling panes instead of one (product grid, current-transaction cart) &mdash; same principle, applied twice, and deliberately <i>not</i> relaxed on phones like <code>.page-fixed</code> is, since the transaction panel needs to stay visible at all times regardless of screen size.</li>
 </ul>
 
 <h3>Don't speculate ahead of the current module</h3>

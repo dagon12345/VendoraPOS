@@ -9,7 +9,9 @@
   --color-primary-hover: #1d4ed8;
   --color-danger: #dc2626;
   --color-danger-hover: #b91c1c;
+  --color-warning: #b45309;
   --radius: 6px;
+  --header-height: 60px;
 }
 
 * {
@@ -111,6 +113,19 @@ tbody tr:last-child td {
   cursor: not-allowed;
 }
 
+// A square icon-only button (e.g. table row actions) - same tap target size as .btn, but no
+// horizontal text padding, so several fit in a narrow "actions" column. Always pair with a
+// title attribute for a tooltip, since there's no visible label.
+.btn-icon {
+  padding: 0.45rem;
+  width: 44px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .error {
   color: var(--color-danger);
 }
@@ -175,8 +190,125 @@ tbody tr:last-child td {
   font-size: 0.8rem;
 }
 
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+// Shared low-stock/expiry indicators - used on Products and Stock Alerts.
+.text-warning {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.text-danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
 .toolbar {
   margin-bottom: 1rem;
+}
+
+// Standard fixed-viewport page layout: the page itself never grows past the visible screen and
+// never produces its own page-level scrollbar, no matter how much data it holds. A page opts in
+// with `.page-fixed`, then marks exactly one child `.page-scroll` (usually wrapping a table or
+// list) as the part that scrolls internally; everything else (heading, search/toolbar,
+// pagination) stays fixed in place. Use this for every list/table page - Products, Sales, and any
+// future entity list (Category, etc.) - so scrolling behavior is consistent app-wide.
+.page-fixed {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height) - 3rem); // 3rem = .app-main's top+bottom padding
+  overflow: hidden;
+
+  > *:not(.page-scroll) {
+    flex-shrink: 0;
+  }
+
+  > .page-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-fixed {
+    // On phones, prefer normal full-page scroll over a cramped internal scroll region - there's
+    // rarely enough visible height at this size for a fixed-viewport layout to feel natural.
+    height: auto;
+    overflow: visible;
+
+    > .page-scroll {
+      overflow-y: visible;
+    }
+  }
+}
+
+// Hides an element visually while keeping it in the accessibility tree and focusable -
+// standard pattern for a native <input type="file"> triggered by a styled button.
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Visible keyboard-shortcut hints, so a shortcut is discoverable right on the control that has
+// it rather than something the user has to already know or dig up in the help page.
+.kbd,
+.kbd-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  font-family: Consolas, Menlo, monospace;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  background: #f3f4f6;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.kbd-badge {
+  font-size: 0.72rem;
+}
+
+.total-line {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.4rem 0;
 }
 
 .search-input {
@@ -305,7 +437,7 @@ tbody tr:last-child td {
       content: none;
     }
 
-    td.actions .btn {
+    td.actions .btn:not(.btn-icon) {
       flex: 1;
     }
   }

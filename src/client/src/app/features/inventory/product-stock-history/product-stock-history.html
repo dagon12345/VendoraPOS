@@ -10,7 +10,9 @@
     </div>
     <p class="muted">Current quantity on hand: <strong>{{ p.quantityOnHand }}</strong></p>
 
-    <h2>Stock History</h2>
+    <h2>Record a stock change</h2>
+    <p class="muted">Restock, Waste, or Adjustment - pick a reason below and it's added to this
+    product's permanent ledger.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="movement-form">
       <div class="field">
@@ -23,13 +25,13 @@
       </div>
       <div class="field">
         <label for="quantity">{{ quantityLabel() }}</label>
+        <span class="field-hint">{{ quantityHint() }}</span>
         <input
           id="quantity"
           type="number"
           [min]="isSignedInput() ? null : 1"
           formControlName="quantity"
         />
-        <span class="field-hint">{{ quantityHint() }}</span>
         @if (form.controls.quantity.touched && form.controls.quantity.value === 0) {
           <span class="field-error">Quantity cannot be zero.</span>
         }
@@ -46,6 +48,8 @@
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
+
+    <h2>Stock History</h2>
 
     @if (movements().length === 0) {
       <p class="muted">No movements recorded yet.</p>
@@ -68,7 +72,11 @@
               <td data-label="Reason">{{ m.reason }}</td>
               <td data-label="Note">{{ m.note || '—' }}</td>
               <td class="actions">
-                <button type="button" class="btn btn-outline" (click)="reverse(m)">Reverse</button>
+                @if (m.reason !== 'Sale') {
+                  <button type="button" class="btn btn-outline" (click)="reverse(m)">Reverse</button>
+                } @else {
+                  <span class="muted" title="Checkout-recorded entries can only be corrected by voiding or restoring the sale itself, from Sales.">—</span>
+                }
               </td>
             </tr>
           }

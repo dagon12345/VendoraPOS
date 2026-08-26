@@ -1,0 +1,12 @@
+.sale-detail {
+  max-width: 640px;
+
+  .receipt-summary {
+    max-width: 320px;
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+}

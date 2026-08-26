@@ -17,5 +17,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Name).HasMaxLength(256).IsRequired();
         builder.Property(p => p.Description).HasMaxLength(2000);
         builder.Property(p => p.Price).HasColumnType("decimal(18,2)");
+
+        builder.Property(p => p.Barcode).HasMaxLength(64);
+        builder.HasIndex(p => p.Barcode).IsUnique();
+        builder.Property(p => p.ImageUrl).HasMaxLength(2048);
     }
 }

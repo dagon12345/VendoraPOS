@@ -1,3 +1,4 @@
+using Vendora.Application.Common.Interfaces;
 using Vendora.Domain.Products;
 using Vendora.Domain.StockMovements;
 
@@ -6,7 +7,8 @@ namespace Vendora.Application.Products;
 public class ProductService(
     IProductRepository repository,
     IStockMovementRepository movementRepository,
-    IProductAuditLogRepository auditLogRepository) : IProductService
+    IProductAuditLogRepository auditLogRepository,
+    IStockNotifier stockNotifier) : IProductService
 {
     public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken ct = default)
     {
@@ -22,7 +24,8 @@ public class ProductService(
 
     public async Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken ct = default)
     {
-        var product = Product.Create(request.Sku, request.Name, request.Price, request.InitialQuantity, request.Description);
+        var product = Product.Create(
+            request.Sku, request.Name, request.Price, request.InitialQuantity, request.Description, request.Barcode, request.ImageUrl, request.ExpiryDate);
         await repository.AddAsync(product, ct);
 
         if (request.InitialQuantity > 0)
@@ -32,6 +35,10 @@ public class ProductService(
         }
 
         await repository.SaveChangesAsync(ct);
+
+        if (request.InitialQuantity > 0)
+            await stockNotifier.NotifyStockChangedAsync(product.Id, product.QuantityOnHand, ct: ct);
+
         return ToDto(product);
     }
 
@@ -44,8 +51,11 @@ public class ProductService(
         if (product.Name != request.Name) changes.Add($"Name: '{product.Name}' -> '{request.Name}'");
         if (product.Price != request.Price) changes.Add($"Price: {product.Price:0.00} -> {request.Price:0.00}");
         if (product.Description != request.Description) changes.Add($"Description: '{product.Description}' -> '{request.Description}'");
+        if (product.Barcode != request.Barcode) changes.Add($"Barcode: '{product.Barcode}' -> '{request.Barcode}'");
+        if (product.ImageUrl != request.ImageUrl) changes.Add($"ImageUrl: '{product.ImageUrl}' -> '{request.ImageUrl}'");
+        if (product.ExpiryDate != request.ExpiryDate) changes.Add($"ExpiryDate: '{product.ExpiryDate}' -> '{request.ExpiryDate}'");
 
-        product.UpdateDetails(request.Name, request.Price, request.Description);
+        product.UpdateDetails(request.Name, request.Price, request.Description, request.Barcode, request.ImageUrl, request.ExpiryDate);
         repository.Update(product);
 
         if (changes.Count > 0)
@@ -88,5 +98,5 @@ public class ProductService(
     }
 
     private static ProductDto ToDto(Product p) =>
-        new(p.Id, p.Sku, p.Name, p.Description, p.Price, p.QuantityOnHand, p.IsActive);
+        new(p.Id, p.Sku, p.Name, p.Description, p.Price, p.QuantityOnHand, p.IsActive, p.Barcode, p.ImageUrl, p.ExpiryDate);
 }

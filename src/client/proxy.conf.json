@@ -4,5 +4,16 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/uploads": {
+    "target": "https://localhost:7196",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/hubs": {
+    "target": "https://localhost:7196",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
   }
 }

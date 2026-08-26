@@ -1,9 +1,13 @@
+using Vendora.Application.Common.Interfaces;
 using Vendora.Domain.Products;
 using Vendora.Domain.StockMovements;
 
 namespace Vendora.Application.StockMovements;
 
-public class StockMovementService(IStockMovementRepository movementRepository, IProductRepository productRepository) : IStockMovementService
+public class StockMovementService(
+    IStockMovementRepository movementRepository,
+    IProductRepository productRepository,
+    IStockNotifier stockNotifier) : IStockMovementService
 {
     public async Task<IReadOnlyList<StockMovementDto>?> GetHistoryAsync(Guid productId, CancellationToken ct = default)
     {
@@ -18,6 +22,8 @@ public class StockMovementService(IStockMovementRepository movementRepository, I
     {
         if (request.Reason == StockMovementReason.InitialStock)
             throw new ArgumentException("InitialStock is recorded automatically and cannot be set manually.", nameof(request));
+        if (request.Reason == StockMovementReason.Sale)
+            throw new ArgumentException("Sale is recorded automatically by Checkout/Void and cannot be set manually.", nameof(request));
 
         var product = await productRepository.GetByIdAsync(productId, ct);
         if (product is null) return null;
@@ -29,6 +35,9 @@ public class StockMovementService(IStockMovementRepository movementRepository, I
         await movementRepository.AddAsync(movement, ct);
 
         await movementRepository.SaveChangesAsync(ct);
+
+        await stockNotifier.NotifyStockChangedAsync(productId, product.QuantityOnHand, ct: ct);
+
         return ToDto(movement);
     }
 

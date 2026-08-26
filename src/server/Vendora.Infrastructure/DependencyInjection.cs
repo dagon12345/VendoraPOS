@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Vendora.Application.Products;
+using Vendora.Application.Sales;
 using Vendora.Application.StockMovements;
 using Vendora.Domain.Products;
+using Vendora.Domain.Sales;
 using Vendora.Domain.StockMovements;
 using Vendora.Infrastructure.Persistence;
 using Vendora.Infrastructure.Repositories;
@@ -24,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
         services.AddScoped<IStockMovementService, StockMovementService>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
+        services.AddScoped<ISaleService, SaleService>();
 
         return services;
     }

@@ -6,4 +6,5 @@ public enum StockMovementReason
     Restock,
     Adjustment,
     Waste,
+    Sale,
 }
