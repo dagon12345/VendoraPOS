@@ -3,6 +3,17 @@
 A cloud-based, subscription POS platform for pharmacies, small retail stores, and coffee shops.
 Backend: .NET (Clean Architecture + DDD + Repository pattern). Frontend: Angular.
 
+**My role**: sole developer — architecture, backend, frontend, and product decisions, end to end.
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | ASP.NET Core (.NET 10), EF Core + SQL Server, Repository pattern, DDD |
+| Frontend | Angular (feature-folder structure) |
+| Real-time | SignalR (live stock-level updates) |
+| Tests | xUnit — Domain and Application layers |
+
 See [docs/architecture.md](docs/architecture.md) for the full design rationale and folder-by-folder explanation,
 [docs/user-guide.md](docs/user-guide.md) for plain-language instructions on using each feature, or
 [CONTRIBUTING.md](CONTRIBUTING.md) if you're setting up locally or opening a pull request.
@@ -59,6 +70,54 @@ npm start
 ```
 Serves on `http://localhost:4200` with `proxy.conf.json` forwarding `/api/*` to the API,
 so the browser never needs CORS or to know the API's port.
+
+## Code highlights
+
+**Sale void with automatic restock** (`src/server/Vendora.Application/Sales/SaleService.cs`) —
+voiding a sale restocks only the units that are still active (so a line already partially
+returned via `VoidLine` doesn't get double-restocked), logs a `StockMovement` for the audit
+trail, and pushes the new stock level over SignalR in the same operation:
+
+```csharp
+public async Task<SaleDto?> VoidAsync(Guid id, VoidSaleRequest request, CancellationToken ct = default)
+{
+    var sale = await saleRepository.GetByIdAsync(id, ct);
+    if (sale is null) return null;
+
+    sale.Void(request.Reason);
+    saleRepository.Update(sale);
+
+    var stockChanges = new List<(Guid ProductId, int QuantityOnHand)>();
+
+    foreach (var line in sale.Lines)
+    {
+        // Restock only what's still active - a line already partially returned via VoidLine
+        // shouldn't have its returned units restocked a second time here.
+        if (line.ActiveQuantity == 0) continue;
+
+        var product = await productRepository.GetByIdAsync(line.ProductId, ct);
+        if (product is null) continue;
+
+        product.AdjustStock(line.ActiveQuantity);
+        productRepository.Update(product);
+        stockChanges.Add((product.Id, product.QuantityOnHand));
+
+        var movement = StockMovement.Create(line.ProductId, line.ActiveQuantity, StockMovementReason.Sale, $"Void of sale {sale.Id}");
+        await movementRepository.AddAsync(movement, ct);
+    }
+
+    await saleRepository.SaveChangesAsync(ct);
+
+    foreach (var (productId, quantityOnHand) in stockChanges)
+        await stockNotifier.NotifyStockChangedAsync(productId, quantityOnHand, ct: ct);
+
+    return ToDto(sale);
+}
+```
+
+There's a matching `RestoreAsync` that undoes a mistaken void — re-deducting stock and throwing
+if it's no longer available (e.g. already sold to someone else since the void) — keeping void and
+restore symmetric rather than a one-way operation.
 
 ## Database migrations
 
